@@ -1,56 +1,81 @@
-const getMeal = document.getElementById('get-meal');
-        document.getElementById('search-button').addEventListener('click', function () {
-            const inputValue = document.getElementById('search-input').value;
-            loadData(inputValue);
-        });
+const searchButton = document.getElementById('search-btn');
+const mealListItem = document.getElementById('meal');
+const mealDetails = document.querySelector('.meal-details-content');
+const recipeCloseBtn = document.getElementById('recipe-close-btn');
 
-        function loadData(inputValue) {
-            fetch(`https://www.themealdb.com/api/json/v1/1/search.php?f=${inputValue}`)
-                .then(promise => promise.json())
-                .then(data => dataShow(data.meals));
-        };
-        const bodyContent = document.getElementById('main-body');
-        function dataShow(data) {
-            for (let i = 0; i < data.length; i++) {
-                const mealItem = data[i];
-                const div = document.createElement('div');
-                div.className = 'meal-list';
-                const h4 = document.createElement('h4');
-                h4.className = "style-name";
-                h4.innerText = mealItem.strMeal;
-                div.appendChild(h4);
-                div.onclick = `displayFoodDetail(${mealItem.strMeal})`;
-                const img = document.createElement('img');
-                img.src = `${mealItem.strMealThumb}`;
-                div.appendChild(img);
-                bodyContent.appendChild(div)
-              
+// event listener for food List
+searchButton.addEventListener('click', getMealList);
+mealListItem.addEventListener('click', getMealRecipe);
+recipeCloseBtn.addEventListener('click', () => {
+    mealDetails.parentElement.classList.remove('showRecipe');
+});
 
-            };
-        };
-    
-//     const displayDetail = (id)=>{
-//         const url = (`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
-//         fetch(url)
-//         .then(res =>res.json())
-//         .then(data => renderInfo(data.meals[0]));
-//     }
-// const renderInfo = meal => {
-//     console.log(meals);
-//     const mealDiv = document.getElementById('mealDetail');
-//     mealDiv.innerHTML = `
-//     <img src = "${meals.strMealThumb}"></img>
-//         <h1>${meals.strMeal}</h1>
-//         <p>Ingreadients:</p>
-//         <p>${meals.strIngredient1}</p>
-//         <p>${meals.strIngredient2}</p>
-//         <p> ${meals.strIngredient3}</p>
-//         <p>${meals.strIngredient4}</p>
-//         <p>${meals.strIngredient5}</p>
-//         <p> ${meals.strIngredient6}</p>
-//         <p> ${meals.strIngredient7}</p>
-//         <p> ${meals.strIngredient8}</p>
-//         <p> ${meals.strIngredient9}</p>
-//         <p> ${meals.strIngredient10}</p>
-//     `
-// }
+// get meal list ingredients
+function getMealList(){
+    let searchInputTxt = document.getElementById('search-input').value.trim();
+    fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${searchInputTxt}`)
+    .then(response => response.json())
+    .then(data => {
+        let html = "";
+        if(data.meals){
+            data.meals.forEach(meal => {
+                html += `
+                    <div class = "meal-item" data-id = "${meal.idMeal}">
+                        <div class = "meal-img">
+                            <img class = "recipe-btn" src = "${meal.strMealThumb}" alt = "food">
+                        </div>
+                        <div class = "meal-name">
+                            <h3>${meal.strMeal}</h3>
+                        </div>
+                    </div>
+                `;
+            });
+            mealListItem.classList.remove('notFound');
+        } else{
+            html = "Sorry, we didn't find your meal!";
+            mealListItem.classList.add('notFound');
+        }
+
+        mealListItem.innerHTML = html;
+    });
+}
+
+// get the meals
+function getMealRecipe(e){
+    e.preventDefault();
+    if(e.target.classList.contains('recipe-btn')){
+        let mealItem = e.target.parentElement.parentElement;
+        fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealItem.dataset.id}`)
+        .then(response => response.json())
+        .then(data => mealRecipeModal(data.meals));
+    }
+}
+
+// create a meals function
+function mealRecipeModal(meal){
+    console.log(meal);
+    meal = meal[0];
+    let html = `
+         <div class = "recipe-meal-img">
+            <img src = "${meal.strMealThumb}" alt = "">
+        </div>
+        <h2 class = "recipe-title">${meal.strMeal}</h2>
+        <p class = "recipe-category">${meal.strCategory}</p>
+        <div class = "recipe-instruct">
+            <h3>Instructions:</h3>
+            <p>${meal.strIngredient1}</p>
+            <p>${meal.strIngredient2}</p>
+            <p>${meal.strIngredient3}</p>
+            <p>${meal.strIngredient4}</p>
+            <p>${meal.strIngredient5}</p>
+            <p>${meal.strIngredient6}</p>
+            <p>${meal.strIngredient7}</p>
+            <p>${meal.strIngredient8}</p>
+            <p>${meal.strIngredient9}</p>
+            <p>${meal.strIngredient10}</p>
+            <p>${meal.strIngredient11}</p>
+        </div>
+    `;
+    mealDetails.innerHTML = html;
+    mealDetails.parentElement.classList.add('showRecipe');
+}
